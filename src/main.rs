@@ -1,44 +1,18 @@
+mod api;
 mod config;
+mod processing;
 
+use crate::api::fansly::{get_account_data, get_stream_data};
 use crate::config::Config;
-use anyhow::{Context, Result};
+use crate::processing::recorder::start_recording;
+use anyhow::Result;
 use clap::Parser;
-use reqwest::header::HeaderMap;
-use serde_json::Value;
-//use serde::Deserialize;
-//use std::path::PathBuf;
-use tokio;
+use tokio::time::{sleep, Duration};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
     username: String,
-}
-
-async fn get_account_data(username: &str, config: &Config) -> Result<serde_json::Value> {
-    let client = reqwest::Client::new();
-    let url = format!(
-        "https://apiv3.fansly.com/api/v1/account?usernames={}&ngsw-bypass=true",
-        username
-    );
-
-    let headers: HeaderMap = (&config.headers)
-        .try_into()
-        .context("Failed to convert headers")?;
-
-    let response = client
-        .get(&url)
-        .headers(headers)
-        .send()
-        .await
-        .context("Failed to send request")?;
-
-    let json_data: Value = response
-        .json()
-        .await
-        .context("Failed to parse JSON resposne")?;
-
-    Ok(json_data)
 }
 
 #[tokio::main]
@@ -48,7 +22,35 @@ async fn main() -> Result<()> {
     let config = Config::load_or_create()?;
 
     let account_data = get_account_data(&cli.username, &config).await?;
-    println!("Account data: {:?}", account_data);
+    //println!("Account data: {:?}", account_data);
 
-    Ok(())
+    let stream_url = format!(
+        "https://apiv3.fansly.com/api/v1/streaming/channel/{}?ngsw-bypass=true",
+        account_data.response[0].id
+    );
+
+    println!("[INFO] Starting online check for {}", cli.username);
+
+    loop {
+        let stream_data = get_stream_data(&stream_url, &config).await?;
+
+        if stream_data.success && stream_data.response.is_some() {
+            let stream_response = stream_data.response.as_ref().unwrap();
+            if stream_response.stream.access {
+                if config.webhook.enabled {
+                    // Implement sending notification for user going live
+                    todo!()
+                }
+                println!(
+                    "[INFO] {} Stream is online, starting archiver",
+                    cli.username
+                );
+                start_recording(&account_data, &stream_data, &config).await?;
+            }
+        } else {
+            println!("[INFO] {} is offline, checking again in 130s", cli.username);
+            sleep(Duration::from_secs(130)).await;
+        }
+    }
+    //Ok(())
 }

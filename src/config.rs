@@ -14,8 +14,8 @@ pub struct Config {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct GeneralConfig {
     pub mt: bool,
-    pub upload: bool,
     pub ffmpeg_convert: bool,
+    pub save_path: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -59,8 +59,8 @@ impl Default for Config {
         Config {
             general: GeneralConfig {
                 mt: true,
-                upload: false,
                 ffmpeg_convert: true,
+                save_path: PathBuf::from("./captures"),
             },
             webhook: WebhookConfig {
                 enabled: true,
