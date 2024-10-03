@@ -12,7 +12,7 @@ Was there a reason or need to have this written in rust? Not really but why not
 
 ## Build/Install 
 
-Prebuilt binaries should be available [here](https://github.com/agnosto/fansly-recorder-rs/releases), should be able to simply unzip the file to get the executable.
+<!--Prebuilt binaries should be available [here](https://github.com/agnosto/fansly-recorder-rs/releases), should be able to simply unzip the file to get the executable.-->
 
 ### Build:
 
