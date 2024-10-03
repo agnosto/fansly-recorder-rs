@@ -8,6 +8,8 @@ Was there a reason or need to have this written in rust? Not really but why not
 - [ffmpeg](https://ffmpeg.org/) - [adding to path](https://phoenixnap.com/kb/ffmpeg-windows) on windows*.
 - [cargo/rust](https://rustup.rs/)
 
+*Alternatively on windows, you can install [chocolatey](https://chocolatey.org/install) to install ffmpeg to have it installed to your path
+
 ## Build/Install 
 
 Prebuilt binaries should be available [here](https://github.com/agnosto/fansly-recorder-rs/releases), should be able to simply unzip the file to get the executable.
