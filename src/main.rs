@@ -5,8 +5,9 @@ mod processing;
 use crate::api::fansly::{get_account_data, get_stream_data};
 use crate::config::Config;
 use crate::processing::recorder::start_recording;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
+use std::process::Command;
 use tokio::time::{sleep, Duration};
 
 #[derive(Parser)]
@@ -15,8 +16,26 @@ struct Cli {
     username: String,
 }
 
+fn check_ffmpeg() -> Result<()> {
+    let output = Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .context("[WARN] Check failed to run command\n")?;
+
+    if output.status.success() {
+        print!("[INFO] FFmpeg installed, continuing.\n");
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "[ERROR] FFmpeg is not installed or not in PATH. Please install FFmpeg and try again."
+        )
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    check_ffmpeg()?;
+
     let cli = Cli::parse();
 
     let config = Config::load_or_create()?;
