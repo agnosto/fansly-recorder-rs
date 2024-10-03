@@ -39,7 +39,8 @@ async fn main() -> Result<()> {
             if stream_response.stream.access {
                 if config.webhook.enabled {
                     // Implement sending notification for user going live
-                    todo!()
+                    //todo!()
+                    println!("wokring on adding webhooks, please be patient :)")
                 }
                 println!(
                     "[INFO] {} Stream is online, starting archiver",

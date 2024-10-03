@@ -1,10 +1,12 @@
 use crate::api::fansly::{AccountMetadata, StreamMetadata, StreamResponse};
 use crate::config::Config;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::Utc;
 use std::path::PathBuf;
 use std::process::Command;
 use tokio::time::{sleep, Duration};
+use vcsr::{args, process_file};
+use walkdir::WalkDir;
 
 pub async fn start_recording(
     account_data: &AccountMetadata,
@@ -120,26 +122,34 @@ async fn convert_to_mp4(ts_filename: &PathBuf, config: &Config) -> Result<PathBu
 }
 
 async fn generate_contact_sheet(mp4_filename: &PathBuf) -> Result<PathBuf> {
-    let contact_sheet_filename = mp4_filename.with_extension("jpg");
+    let mut args = args::application_args();
 
-    let output = Command::new("./mt")
-        .args(&[
-            "--columns=4",
-            "--numcaps=24",
-            "--header-meta",
-            "--fast",
-            "--comment=Archive - Fansly VODs",
-            &format!("--output={}", contact_sheet_filename.display()),
-            mp4_filename.to_str().unwrap(),
-        ])
-        .output()?;
+    // Set up the arguments for vcsr
+    args.filenames = vec![mp4_filename.to_str().unwrap().to_string()];
+    args.grid = vcsr::models::Grid { x: 4, y: 6 }; // Adjust as needed
+    args.num_samples = Some(24); // Adjust as needed
+    args.output_path = Some(
+        mp4_filename
+            .with_extension("jpg")
+            .to_str()
+            .unwrap()
+            .to_string(),
+    );
+    args.show_timestamp = true;
+    args.vcs_width = 1500;
 
-    if !output.status.success() {
-        anyhow::bail!(
-            "mt command failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
+    // Create a DirEntry from the mp4_filename
+    let dir_entry = WalkDir::new(mp4_filename)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .find(|e| e.path() == mp4_filename)
+        .context("Failed to create DirEntry")?;
+    let contact_sheet =
+        process_file(&dir_entry, &mut args).context("Failed to generate contact sheet")?;
 
-    Ok(contact_sheet_filename)
+    println!(
+        "[vcsr] Generated contact sheet: {}",
+        contact_sheet.display()
+    );
+    Ok(contact_sheet)
 }
