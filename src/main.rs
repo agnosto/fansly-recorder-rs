@@ -1,10 +1,12 @@
 mod api;
 mod config;
 mod processing;
+mod webhooks;
 
 use crate::api::fansly::{get_account_data, get_stream_data};
-use crate::config::Config;
+use crate::config::{Config, WebhookConfig};
 use crate::processing::recorder::start_recording;
+use crate::webhooks::send_live_noti;
 use anyhow::{Context, Result};
 use clap::Parser;
 use std::process::Command;
@@ -50,6 +52,13 @@ async fn main() -> Result<()> {
 
     println!("[INFO] Starting online check for {}", cli.username);
 
+    let webhook_config = WebhookConfig {
+        enabled: config.webhook.enabled,
+        live_webhook: config.webhook.live_webhook.clone(),
+        info_webhook: config.webhook.info_webhook.clone(),
+        webhook_mention: config.webhook.webhook_mention.clone(),
+    };
+
     loop {
         let stream_data = get_stream_data(&stream_url, &config).await?;
 
@@ -57,9 +66,12 @@ async fn main() -> Result<()> {
             let stream_response = stream_data.response.as_ref().unwrap();
             if stream_response.stream.access {
                 if config.webhook.enabled {
-                    // Implement sending notification for user going live
-                    //todo!()
-                    println!("wokring on adding webhooks, please be patient :)")
+                    send_live_noti(
+                        &webhook_config,
+                        &account_data.response[0].username,
+                        &account_data.response[0].avatar.location,
+                    )
+                    .await?;
                 }
                 println!(
                     "[INFO] {} Stream is online, starting archiver",

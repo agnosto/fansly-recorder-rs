@@ -68,8 +68,9 @@ fansly-recorder {username}
 
 ## TODO:
 
-- [ ] Add check for ffmpeg before attempting to run 
-- [ ] Add webhook sending for notifications of lives starting
+- [x] Add check for ffmpeg before attempting to run 
+- [x] Add webhook sending for notifications of lives starting (untested/partially)
+    - [webhook-rs](https://github.com/thoo0224/webhook-rs) doesn't have attachments, will probably default to POST request to them or something.
 - [ ] Add config option for recorded file ext to allow direct recording to mp4
 - [ ] Maybe readd uploading to a remote host
 
