@@ -16,6 +16,7 @@ toml = "0.8.19"
 vcsr = "0.4.0"
 walkdir = "2.5.0"
 serenity = "0.12.2"
+url = "2.5.2"
 
 [profile.release]
 strip = true

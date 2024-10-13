@@ -14,19 +14,23 @@ pub async fn send_live_noti(
     }
 
     let http = Http::new("");
+
     let webhook = Webhook::from_url(&http, &config.live_webhook)
         .await
         .context("Failed to create webhook")?;
 
     let live_url = format!("https://fansly.com/live/{}", username);
 
-    let embed = CreateEmbed::default()
+    let mut embed = CreateEmbed::default()
         .title(format!("{} is now Live!", username))
         .color(Colour::from_rgb(3, 178, 248))
         .url(live_url)
-        //.author(|a: &mut CreateEmbed| a.name(username).icon_url(avatar_url))
-        .thumbnail(avatar_url)
         .timestamp(chrono::Utc::now());
+
+    // Only set the thumbnail if the avatar_url is a valid URL
+    if let Ok(url) = url::Url::parse(avatar_url) {
+        embed = embed.thumbnail(url.as_str());
+    }
 
     let builder = ExecuteWebhook::default()
         .content(format!(
@@ -42,6 +46,7 @@ pub async fn send_live_noti(
         .context("Failed to execute webhook")?;
 
     println!("[INFO] Sent live notification for {}", username);
+
     Ok(())
 }
 

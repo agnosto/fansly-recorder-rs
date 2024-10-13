@@ -738,6 +738,7 @@ dependencies = [
  "serenity",
  "tokio",
  "toml",
+ "url",
  "vcsr",
  "walkdir",
 ]
